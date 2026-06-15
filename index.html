@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>Calisthénie — Bien lever les bases</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{
+    --bg:#0f1115; --bg2:#171a21; --card:#1d212b; --card2:#252a36;
+    --txt:#eef1f6; --muted:#9aa3b2; --line:#2c3240;
+    --accent:#ff6b35; --accent2:#ffa600; --ok:#3ecf8e; --bad:#ff5470;
+    --radius:16px; --maxw:560px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.45; padding-bottom:84px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:16px 16px 0}
+  header.top{
+    position:sticky; top:0; z-index:20; background:linear-gradient(180deg,var(--bg) 70%,transparent);
+    padding-top:env(safe-area-inset-top);
+  }
+  header.top h1{font-size:18px; margin:14px 0 4px; letter-spacing:.3px}
+  header.top .sub{color:var(--muted); font-size:12.5px; margin-bottom:10px}
+  h2{font-size:16px; margin:22px 0 10px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px}
+  .muted{color:var(--muted)}
+  .small{font-size:12.5px}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:600;
+    background:var(--card2); color:var(--txt); cursor:pointer; width:100%;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a1206}
+  .btn.ok{background:var(--ok); color:#062016}
+  .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--txt)}
+  .btn.sm{width:auto; padding:9px 12px; font-size:13px; border-radius:10px}
+  .row{display:flex; gap:10px}
+  .row.wrap{flex-wrap:wrap}
+  .grow{flex:1}
+  .pill{display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:var(--card2); color:var(--muted); letter-spacing:.4px}
+  .pill.accent{background:rgba(255,107,53,.16); color:var(--accent2)}
+  .pill.ok{background:rgba(62,207,142,.16); color:var(--ok)}
+  input[type=number],textarea{
+    width:100%; background:var(--bg2); border:1px solid var(--line); color:var(--txt);
+    border-radius:12px; padding:13px; font-size:16px; font-family:inherit;
+  }
+  textarea{min-height:64px; resize:vertical}
+  label.fld{display:block; font-size:12.5px; color:var(--muted); margin:0 0 6px}
+  /* tabs */
+  nav.tabs{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:var(--bg2); border-top:1px solid var(--line);
+    display:flex; padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav.tabs button{
+    flex:1; background:none; border:none; color:var(--muted); font-size:11px; font-weight:600;
+    display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 2px; cursor:pointer;
+  }
+  nav.tabs button .ico{font-size:20px; line-height:1}
+  nav.tabs button.active{color:var(--accent2)}
+  .hide{display:none !important}
+  /* exercise progression chips */
+  .lvlbar{display:flex; gap:6px; margin:10px 0 4px}
+  .lvlbar .seg{flex:1; height:6px; border-radius:3px; background:var(--card2)}
+  .lvlbar .seg.done{background:var(--ok)}
+  .lvlbar .seg.cur{background:var(--accent)}
+  .ex-head{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .ex-head .nom{font-weight:700; font-size:15.5px}
+  .crit{background:var(--bg2); border-left:3px solid var(--accent); padding:9px 12px; border-radius:8px; font-size:13px; margin:10px 0}
+  .desc{font-size:13.5px; color:#cdd3de}
+  /* session */
+  .big-timer{font-size:60px; font-weight:800; text-align:center; letter-spacing:2px; font-variant-numeric:tabular-nums; margin:6px 0}
+  .step-target{font-size:34px; font-weight:800; color:var(--accent2)}
+  .center{text-align:center}
+  .progress-dots{display:flex; gap:5px; justify-content:center; margin:8px 0 2px; flex-wrap:wrap}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--card2)}
+  .dot.done{background:var(--ok)} .dot.cur{background:var(--accent); transform:scale(1.3)}
+  .sess-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:14px}
+  .sess-row:last-child{border-bottom:none}
+  .divider{height:1px; background:var(--line); margin:14px 0}
+  details summary{cursor:pointer; font-weight:600; font-size:14px; padding:6px 0}
+  a{color:var(--accent2)}
+  .toast{position:fixed; bottom:96px; left:50%; transform:translateX(-50%); background:var(--ok); color:#062016;
+    padding:11px 18px; border-radius:12px; font-weight:700; font-size:14px; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>🏋️ Bien lever les bases</h1>
+    <div class="sub" id="subtitle">Programme calisthénie · Phase 1</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ====================== SÉANCE ====================== -->
+  <section id="view-seance">
+    <!-- accueil séance (avant démarrage) -->
+    <div id="seance-intro">
+      <div class="card">
+        <div class="ex-head">
+          <div class="nom">La séance du jour</div>
+          <span class="pill accent">Circuit technique</span>
+        </div>
+        <p class="small muted" style="margin:10px 0 0">
+          6 exercices à enchaîner · <b>3 tours</b> · pause 45–60 s entre exercices ·
+          pause 2 min entre les tours. Chaque exercice se fait au <b>niveau actuel</b>
+          que vous avez choisi dans l'onglet Progression.
+        </p>
+      </div>
+      <div class="card">
+        <div class="small muted" style="margin-bottom:8px">Au programme aujourd'hui</div>
+        <div id="seance-apercu"></div>
+      </div>
+      <button class="btn primary" id="btn-start">▶︎ Démarrer la séance</button>
+      <div style="height:14px"></div>
+    </div>
+
+    <!-- séance en cours -->
+    <div id="seance-live" class="hide">
+      <div class="card center">
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <span class="pill" id="live-tour">Tour 1 / 3</span>
+          <span class="pill" id="live-ex">Exercice 1 / 6</span>
+        </div>
+        <div class="progress-dots" id="live-dots"></div>
+
+        <!-- phase EXERCICE -->
+        <div id="phase-ex">
+          <div style="margin:14px 0 2px" class="muted small" id="ex-groupe">Tirage</div>
+          <div style="font-size:22px; font-weight:800" id="ex-nom">Tractions</div>
+          <div class="muted small" id="ex-niveau">Niveau : …</div>
+          <div style="margin:16px 0 4px">
+            <div class="muted small">Objectif</div>
+            <div class="step-target" id="ex-cible">15 reps</div>
+          </div>
+          <div class="desc" id="ex-desc" style="text-align:left; margin:6px 0 14px"></div>
+
+          <!-- chrono pour exercices en temps -->
+          <div id="ex-chrono-box" class="hide">
+            <div class="big-timer" id="ex-chrono">0:00</div>
+            <div class="row">
+              <button class="btn ghost grow" id="chrono-toggle">Démarrer le chrono</button>
+            </div>
+            <div style="height:10px"></div>
+          </div>
+
+          <label class="fld" id="ex-input-label">Répétitions réalisées</label>
+          <input type="number" id="ex-input" inputmode="numeric" min="0" step="1">
+          <div style="height:12px"></div>
+          <button class="btn primary" id="btn-done-ex">✓ Terminé — repos</button>
+        </div>
+
+        <!-- phase REPOS -->
+        <div id="phase-rest" class="hide">
+          <div class="muted small" style="margin-top:12px" id="rest-label">Repos</div>
+          <div class="big-timer" id="rest-timer">0:60</div>
+          <div class="muted small" id="rest-next">Prochain : …</div>
+          <div class="row" style="margin-top:14px">
+            <button class="btn ghost sm grow" id="rest-minus">−15 s</button>
+            <button class="btn ghost sm grow" id="rest-plus">+15 s</button>
+          </div>
+          <div style="height:10px"></div>
+          <button class="btn primary" id="rest-skip">Passer le repos →</button>
+        </div>
+      </div>
+
+      <button class="btn ghost" id="btn-abandon">Abandonner la séance</button>
+      <div style="height:14px"></div>
+    </div>
+
+    <!-- séance terminée -->
+    <div id="seance-done" class="hide">
+      <div class="card center">
+        <div style="font-size:40px">🎉</div>
+        <div style="font-size:20px; font-weight:800; margin:6px 0">Séance terminée !</div>
+        <div class="muted small">Récapitulatif ci-dessous. Pense à valider tes niveaux si tu as atteint les objectifs.</div>
+      </div>
+      <div class="card">
+        <div class="small muted" style="margin-bottom:8px">Récap</div>
+        <div id="done-recap"></div>
+      </div>
+      <label class="fld">Notes (ressenti, douleurs, remarques)</label>
+      <textarea id="done-notes" placeholder="Optionnel…"></textarea>
+      <div style="height:12px"></div>
+      <button class="btn ok" id="btn-save-sess">💾 Enregistrer la séance</button>
+      <div style="height:14px"></div>
+    </div>
+  </section>
+
+  <!-- ====================== PROGRESSION ====================== -->
+  <section id="view-progression" class="hide">
+    <p class="small muted">Ton niveau actuel pour chaque exercice. Quand tu valides le critère, passe au niveau suivant.</p>
+    <div id="progression-list"></div>
+  </section>
+
+  <!-- ====================== JOURNAL ====================== -->
+  <section id="view-journal" class="hide">
+    <div id="journal-empty" class="card center muted small hide">Aucune séance enregistrée pour l'instant.</div>
+    <div id="journal-list"></div>
+    <details style="margin-top:8px">
+      <summary class="muted">Données &amp; sauvegarde</summary>
+      <div class="card" style="margin-top:10px">
+        <p class="small muted">Tout est stocké sur cet appareil (localStorage). Exporte pour sauvegarder.</p>
+        <div class="row wrap">
+          <button class="btn ghost sm" id="btn-export">⬇︎ Exporter (JSON)</button>
+          <button class="btn ghost sm" id="btn-import">⬆︎ Importer</button>
+          <button class="btn ghost sm" id="btn-reset">🗑 Réinitialiser</button>
+        </div>
+        <input type="file" id="import-file" accept="application/json" class="hide">
+      </div>
+    </details>
+  </section>
+
+  <!-- ====================== FICHES ====================== -->
+  <section id="view-fiches" class="hide">
+    <p class="small muted">Fiches techniques de chaque exercice et de tous ses niveaux.</p>
+    <div id="fiches-list"></div>
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <button data-view="seance" class="active"><span class="ico">▶︎</span>Séance</button>
+  <button data-view="progression"><span class="ico">📈</span>Progression</button>
+  <button data-view="journal"><span class="ico">📓</span>Journal</button>
+  <button data-view="fiches"><span class="ico">📖</span>Fiches</button>
+</nav>
+
+<div id="toast" class="toast hide"></div>
+
+<script>
+/* =========================================================================
+   DONNÉES DU PROGRAMME — Phase 1 « Bien lever les bases »
+   Pour AJOUTER un exercice ou un niveau : éditer le tableau EXERCICES.
+   - type : 'reps' (compte de répétitions) ou 'temps' (secondes à tenir)
+   - cible : objectif du niveau (nombre)
+   - critere : texte du critère de validation (livre)
+   - desc : consignes d'exécution (fiche technique)
+   - opt : true = niveau optionnel
+   ========================================================================= */
+const EXERCICES = [
+  { id:'tractions', nom:'Tractions', groupe:'Tirage', niveaux:[
+    { id:'t1',  nom:'Tractions australiennes', type:'reps', cible:15,
+      critere:'15 répétitions, le corps presque à l’horizontale par rapport au support.',
+      desc:'Barre à hauteur des hanches. Corps gainé, talons au sol, tire la poitrine vers la barre puis redescends en contrôle. Plus le corps est horizontal, plus c’est difficile.' },
+    { id:'t1b', nom:'La suspension', type:'temps', cible:30,
+      critere:'Tenir 30 secondes confortablement, sans glisser.',
+      desc:'Suspends-toi à la barre, bras tendus, prise en pronation largeur d’épaules. Garde les épaules engagées (actives, pas relâchées).' },
+    { id:'t2',  nom:'Tractions avec élastique', type:'reps', cible:6, opt:true,
+      critere:'Mouvement maîtrisé — 6 répétitions suffisent. Ne reste pas trop longtemps à ce niveau.',
+      desc:'Tractions assistées par un élastique passé sous les pieds ou les genoux. Travaille le mouvement complet, menton au-dessus de la barre.' },
+    { id:'t3',  nom:'Tractions négatives', type:'reps', cible:5,
+      critere:'5 répétitions, chacune d’au moins 10 s, en étant capable de stopper 2-3 s la descente en tout point du mouvement.',
+      desc:'Pars menton au-dessus de la barre (saut ou marchepied), puis descends le plus lentement possible, bras tendus en fin de mouvement.' },
+    { id:'t4',  nom:'Tractions (complètes)', type:'reps', cible:10,
+      critere:'10 répétitions en amplitude complète.',
+      desc:'Prise pronation largeur d’épaules. Pars bras tendus, tire jusqu’au menton au-dessus de la barre, redescends bras tendus. Amplitude complète, sans à-coups.' },
+  ]},
+  { id:'pompes', nom:'Pompes', groupe:'Poussée', niveaux:[
+    { id:'p1', nom:'Les pompes à genoux', type:'reps', cible:20,
+      critere:'20 répétitions en amplitude complète.',
+      desc:'En appui sur les genoux (chevilles croisées). Corps gainé du genou à la tête, descends la poitrine près du sol, remonte bras tendus.' },
+    { id:'p2', nom:'Les pompes mains surélevées', type:'reps', cible:20,
+      critere:'20 répétitions sur un support bas, le corps presque à l’horizontale par rapport au sol.',
+      desc:'Mains sur un support (banc, marche). Plus le support est bas, plus c’est difficile. Corps gainé, descends la poitrine vers le support.' },
+    { id:'p3', nom:'Les pompes négatives', type:'reps', cible:12,
+      critere:'12 répétitions en amplitude complète, capable de stopper 2-3 s la descente en tout point.',
+      desc:'En position de pompe au sol, descends le plus lentement possible jusqu’au sol en marquant des arrêts. Remonte comme tu peux.' },
+    { id:'p4', nom:'Les pompes', type:'reps', cible:12,
+      critere:'12 répétitions en amplitude complète.',
+      desc:'Mains largeur d’épaules, corps gainé et aligné. Descends la poitrine près du sol (coudes ~45°), remonte bras tendus.' },
+  ]},
+  { id:'pistol', nom:'Pistol squats', groupe:'Jambes', niveaux:[
+    { id:'s1', nom:'Les demi-squats', type:'reps', cible:20,
+      critere:'20 répétitions.',
+      desc:'Pieds largeur de hanches. Descends jusqu’à ce que les cuisses soient parallèles au sol, dos droit, talons au sol, puis remonte.' },
+    { id:'s2', nom:'Les squats profonds', type:'reps', cible:20,
+      critere:'20 répétitions.',
+      desc:'Comme le squat mais descends le plus bas possible (fesses vers les talons), dos droit, talons au sol.' },
+    { id:'s3', nom:'Les pistol squats assistés', type:'reps', cible:10,
+      critere:'10 répétitions de chaque côté, avec le moins d’assistance possible.',
+      desc:'Sur une jambe, l’autre tendue devant. Aide-toi d’un support (sangle, poteau, barre) en réduisant l’assistance au fil du temps. 10 par jambe.' },
+    { id:'s4', nom:'Les pistol squats', type:'reps', cible:6,
+      critere:'6 répétitions de chaque côté.',
+      desc:'Sur une jambe, l’autre tendue devant le corps. Descends complètement et remonte sans assistance. 6 par jambe.' },
+  ]},
+  { id:'gainage', nom:'Gainage', groupe:'Tronc', niveaux:[
+    { id:'g1', nom:'Le gainage à genoux ou pieds écartés', type:'temps', cible:30,
+      critere:'Tenir 30 secondes.',
+      desc:'Planche sur les avant-bras, en appui sur les genoux OU pieds écartés (plus facile). Corps aligné, abdos et fessiers serrés.' },
+    { id:'g2', nom:'Le gainage', type:'temps', cible:60,
+      critere:'Tenir 60 secondes, confortablement.',
+      desc:'Planche classique sur les avant-bras et la pointe des pieds. Corps parfaitement aligné (ni cambrure ni bassin haut), gainage complet.' },
+  ]},
+  { id:'dips', nom:'Dips', groupe:'Poussée', niveaux:[
+    { id:'d1', nom:'Les dips sur support, jambes pliées', type:'reps', cible:12,
+      critere:'12 répétitions.',
+      desc:'Mains sur un support derrière toi (barre basse, banc), jambes pliées pieds au sol. Descends en pliant les coudes ~90°, remonte.' },
+    { id:'d2', nom:'Les dips sur support, jambes tendues', type:'reps', cible:12,
+      critere:'12 répétitions.',
+      desc:'Idem mais jambes tendues devant (talons au sol) — plus difficile. Descends coudes ~90°, remonte bras tendus.' },
+    { id:'d3', nom:'Les dips négatifs', type:'reps', cible:8,
+      critere:'8 répétitions.',
+      desc:'Aux barres parallèles, pars bras tendus en haut, descends le plus lentement possible en marquant des arrêts. Remonte comme tu peux.' },
+    { id:'d4', nom:'Les dips', type:'reps', cible:12,
+      critere:'12 répétitions.',
+      desc:'Aux barres parallèles, corps gainé, descends jusqu’à ~90° aux coudes, remonte bras tendus. Amplitude complète.' },
+  ]},
+  { id:'lsit', nom:'L-sit', groupe:'Tronc', niveaux:[
+    { id:'l1', nom:'Vous soulever', type:'temps', cible:7,
+      critere:'Tenir 6-8 secondes.',
+      desc:'Assis, jambes tendues, mains au sol/sur supports à côté des hanches. Décolle les fesses du sol et tiens.' },
+    { id:'l1b', nom:'Vous soulever au sol', type:'temps', cible:7,
+      critere:'Tenir 6-8 secondes.',
+      desc:'Variante au sol : mains à plat, décolle tout le corps du sol (jambes pliées si besoin) et tiens.' },
+    { id:'l2', nom:'Les relevés de jambes', type:'reps', cible:10,
+      critere:'10 répétitions, mains au-delà des genoux.',
+      desc:'Suspendu ou en appui, monte les jambes/genoux au-delà de la ligne des hanches, contrôle la descente.' },
+    { id:'l3', nom:'Déplier les jambes', type:'temps', cible:7,
+      critere:'Soulever jambes dépliées, tenir 6-8 secondes.',
+      desc:'En appui sur les mains, corps soulevé, déplie progressivement les jambes devant toi et tiens.' },
+    { id:'l4', nom:'Le L-sit', type:'temps', cible:10,
+      critere:'Tenir 10 secondes.',
+      desc:'En appui sur les mains (sol ou barres), corps soulevé, jambes tendues à l’horizontale formant un L. Tiens 10 s.' },
+  ]},
+];
+
+const CIRCUIT = { tours:3, restEx:60, restTour:120 }; // 45-60 s / 2 min
+
+/* ============================ STOCKAGE ============================ */
+const LS_PROG = 'tt_progression_v1';
+const LS_SESS = 'tt_sessions_v1';
+
+function loadProg(){
+  let p = {};
+  try{ p = JSON.parse(localStorage.getItem(LS_PROG)) || {}; }catch(e){}
+  // défaut : premier niveau de chaque exercice
+  EXERCICES.forEach(ex=>{ if(!p[ex.id] || !ex.niveaux.some(n=>n.id===p[ex.id])) p[ex.id]=ex.niveaux[0].id; });
+  return p;
+}
+function saveProg(p){ localStorage.setItem(LS_PROG, JSON.stringify(p)); }
+function loadSess(){ try{ return JSON.parse(localStorage.getItem(LS_SESS))||[]; }catch(e){ return []; } }
+function saveSess(s){ localStorage.setItem(LS_SESS, JSON.stringify(s)); }
+
+let prog = loadProg();
+
+/* ============================ HELPERS ============================ */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+function ex(id){ return EXERCICES.find(e=>e.id===id); }
+function niv(exId, nivId){ return ex(exId).niveaux.find(n=>n.id===nivId); }
+function curNiv(exId){ return niv(exId, prog[exId]); }
+function nivIndex(exId, nivId){ return ex(exId).niveaux.findIndex(n=>n.id===nivId); }
+function cibleTxt(n){ return n.type==='temps' ? n.cible+' s' : n.cible+' reps'; }
+function fmtTime(s){ const m=Math.floor(s/60), ss=s%60; return m+':' + String(ss).padStart(2,'0'); }
+function fmtDate(iso){
+  const d=new Date(iso);
+  return d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}) +
+    ' · ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.remove('hide');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.add('hide'),2000);
+}
+
+/* ============================ NAVIGATION ============================ */
+function showView(v){
+  $$('section[id^=view-]').forEach(s=>s.classList.add('hide'));
+  $('#view-'+v).classList.remove('hide');
+  $$('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  window.scrollTo(0,0);
+  if(v==='progression') renderProgression();
+  if(v==='journal') renderJournal();
+  if(v==='fiches') renderFiches();
+  if(v==='seance' && !session.active) renderApercu();
+}
+$$('nav.tabs button').forEach(b=> b.addEventListener('click',()=>showView(b.dataset.view)));
+
+/* ============================ APERÇU SÉANCE ============================ */
+function renderApercu(){
+  $('#seance-apercu').innerHTML = EXERCICES.map(e=>{
+    const n=curNiv(e.id);
+    return `<div class="sess-row"><span>${e.nom} <span class="muted small">· ${n.nom}</span></span>
+      <span class="pill accent">${cibleTxt(n)}</span></div>`;
+  }).join('');
+}
+
+/* ============================ SÉANCE GUIDÉE ============================ */
+const session = {
+  active:false, tour:0, exi:0, phase:'ex', results:{}, // results['tour-exId']=valeur
+  chrono:{running:false, sec:0, h:null}, rest:{sec:0, h:null}
+};
+
+function startSession(){
+  session.active=true; session.tour=0; session.exi=0; session.phase='ex'; session.results={};
+  $('#seance-intro').classList.add('hide');
+  $('#seance-done').classList.add('hide');
+  $('#seance-live').classList.remove('hide');
+  renderStep();
+}
+
+function totalSteps(){ return CIRCUIT.tours * EXERCICES.length; }
+function curStepNo(){ return session.tour*EXERCICES.length + session.exi; }
+
+function renderDots(){
+  let html='';
+  for(let t=0;t<CIRCUIT.tours;t++){
+    for(let e=0;e<EXERCICES.length;e++){
+      const no=t*EXERCICES.length+e, cur=curStepNo();
+      let cls = no<cur ? 'done' : (no===cur && session.phase==='ex' ? 'cur' : '');
+      html+=`<span class="dot ${cls}"></span>`;
+    }
+  }
+  $('#live-dots').innerHTML=html;
+}
+
+function renderStep(){
+  stopChrono();
+  $('#phase-ex').classList.remove('hide');
+  $('#phase-rest').classList.add('hide');
+  session.phase='ex';
+  const e=EXERCICES[session.exi]; const n=curNiv(e.id);
+  $('#live-tour').textContent=`Tour ${session.tour+1} / ${CIRCUIT.tours}`;
+  $('#live-ex').textContent=`Exercice ${session.exi+1} / ${EXERCICES.length}`;
+  $('#ex-groupe').textContent=e.groupe;
+  $('#ex-nom').textContent=e.nom;
+  $('#ex-niveau').textContent='Niveau : '+n.nom;
+  $('#ex-cible').textContent=cibleTxt(n);
+  $('#ex-desc').textContent=n.desc;
+  const isTime = n.type==='temps';
+  $('#ex-input-label').textContent = isTime ? 'Temps tenu (secondes)' : 'Répétitions réalisées';
+  const inp=$('#ex-input'); inp.value = n.cible;
+  $('#ex-chrono-box').classList.toggle('hide', !isTime);
+  if(isTime){ session.chrono.sec=0; $('#ex-chrono').textContent='0:00'; $('#chrono-toggle').textContent='Démarrer le chrono'; }
+  renderDots();
+}
+
+/* chrono count-up pour exercices en temps */
+function toggleChrono(){
+  if(session.chrono.running){ stopChrono(); $('#ex-input').value=session.chrono.sec; }
+  else{
+    session.chrono.running=true; $('#chrono-toggle').textContent='⏸ Arrêter';
+    session.chrono.h=setInterval(()=>{ session.chrono.sec++; $('#ex-chrono').textContent=fmtTime(session.chrono.sec); },1000);
+  }
+}
+function stopChrono(){
+  session.chrono.running=false;
+  if(session.chrono.h){ clearInterval(session.chrono.h); session.chrono.h=null; }
+  $('#chrono-toggle').textContent='Démarrer le chrono';
+}
+
+function doneExercise(){
+  stopChrono();
+  const e=EXERCICES[session.exi]; const n=curNiv(e.id);
+  const val=parseInt($('#ex-input').value,10);
+  session.results[`${session.tour}-${e.id}`] = isNaN(val)?0:val;
+  // dernier exercice du dernier tour ?
+  const lastEx = session.exi===EXERCICES.length-1;
+  const lastTour = session.tour===CIRCUIT.tours-1;
+  if(lastEx && lastTour){ finishSession(); return; }
+  // sinon repos
+  const restSec = lastEx ? CIRCUIT.restTour : CIRCUIT.restEx;
+  let next;
+  if(lastEx){ next = `Tour ${session.tour+2} · ${EXERCICES[0].nom}`; }
+  else { next = EXERCICES[session.exi+1].nom; }
+  startRest(restSec, next, lastEx);
+}
+
+function startRest(sec, nextLabel, isTourBreak){
+  session.phase='rest';
+  $('#phase-ex').classList.add('hide');
+  $('#phase-rest').classList.remove('hide');
+  $('#rest-label').textContent = isTourBreak ? 'Repos entre les tours' : 'Repos';
+  $('#rest-next').textContent = 'Prochain : '+nextLabel;
+  session.rest.sec=sec;
+  $('#rest-timer').textContent=fmtTime(sec);
+  renderDots();
+  clearInterval(session.rest.h);
+  session.rest.h=setInterval(()=>{
+    session.rest.sec--;
+    $('#rest-timer').textContent=fmtTime(Math.max(0,session.rest.sec));
+    if(session.rest.sec<=0){ endRest(); }
+  },1000);
+}
+function endRest(){
+  clearInterval(session.rest.h); session.rest.h=null;
+  try{ if(navigator.vibrate) navigator.vibrate([120,60,120]); }catch(e){}
+  // avancer
+  if(session.exi===EXERCICES.length-1){ session.tour++; session.exi=0; }
+  else { session.exi++; }
+  renderStep();
+}
+
+function finishSession(){
+  clearInterval(session.rest.h); stopChrono();
+  session.active=false;
+  $('#seance-live').classList.add('hide');
+  $('#seance-done').classList.remove('hide');
+  // récap
+  $('#done-recap').innerHTML = EXERCICES.map(e=>{
+    const n=curNiv(e.id);
+    const vals=[]; for(let t=0;t<CIRCUIT.tours;t++){ vals.push(session.results[`${t}-${e.id}`] ?? '–'); }
+    const unit = n.type==='temps'?'s':'';
+    return `<div class="sess-row"><span>${e.nom} <span class="muted small">· ${n.nom}</span></span>
+      <span class="small">${vals.map(v=>v+unit).join(' · ')}</span></div>`;
+  }).join('');
+  $('#done-notes').value='';
+  session._snapshot = JSON.parse(JSON.stringify(session.results));
+}
+
+function saveSession(){
+  const sess = loadSess();
+  const entry = {
+    id: Date.now(), date: new Date().toISOString(),
+    notes: $('#done-notes').value.trim(),
+    items: EXERCICES.map(e=>{
+      const n=curNiv(e.id);
+      const tours=[]; for(let t=0;t<CIRCUIT.tours;t++){ tours.push(session._snapshot[`${t}-${e.id}`] ?? null); }
+      return { exId:e.id, exNom:e.nom, nivId:n.id, nivNom:n.nom, type:n.type, cible:n.cible, tours };
+    })
+  };
+  sess.unshift(entry); saveSess(sess);
+  $('#seance-done').classList.add('hide');
+  $('#seance-intro').classList.remove('hide');
+  renderApercu();
+  toast('Séance enregistrée ✓');
+  showView('journal');
+}
+
+function abandon(){
+  if(!confirm('Abandonner la séance en cours ? Les résultats non enregistrés seront perdus.')) return;
+  clearInterval(session.rest.h); stopChrono();
+  session.active=false;
+  $('#seance-live').classList.add('hide');
+  $('#seance-intro').classList.remove('hide');
+  renderApercu();
+}
+
+$('#btn-start').addEventListener('click', startSession);
+$('#btn-done-ex').addEventListener('click', doneExercise);
+$('#chrono-toggle').addEventListener('click', toggleChrono);
+$('#rest-skip').addEventListener('click', endRest);
+$('#rest-minus').addEventListener('click', ()=>{ session.rest.sec=Math.max(5,session.rest.sec-15); $('#rest-timer').textContent=fmtTime(session.rest.sec); });
+$('#rest-plus').addEventListener('click', ()=>{ session.rest.sec+=15; $('#rest-timer').textContent=fmtTime(session.rest.sec); });
+$('#btn-save-sess').addEventListener('click', saveSession);
+$('#btn-abandon').addEventListener('click', abandon);
+
+/* ============================ PROGRESSION ============================ */
+function renderProgression(){
+  $('#progression-list').innerHTML = EXERCICES.map(e=>{
+    const ci = nivIndex(e.id, prog[e.id]);
+    const n = e.niveaux[ci];
+    const segs = e.niveaux.map((_,i)=>`<div class="seg ${i<ci?'done':(i===ci?'cur':'')}"></div>`).join('');
+    const canPrev = ci>0, canNext = ci<e.niveaux.length-1;
+    return `<div class="card">
+      <div class="ex-head">
+        <div><div class="nom">${e.nom}</div><div class="muted small">${e.groupe}</div></div>
+        <span class="pill accent">Niveau ${ci+1}/${e.niveaux.length}</span>
+      </div>
+      <div class="lvlbar">${segs}</div>
+      <div style="font-weight:700; margin-top:6px">${n.nom} ${n.opt?'<span class="pill">optionnel</span>':''}</div>
+      <div class="crit"><b>Pour valider :</b> ${n.critere}</div>
+      <div class="row">
+        <button class="btn ghost sm grow" ${canPrev?'':'disabled style=opacity:.4'} onclick="changeNiveau('${e.id}',-1)">← Niveau précédent</button>
+        <button class="btn ${canNext?'ok':'ghost'} sm grow" ${canNext?'':'disabled style=opacity:.4'} onclick="changeNiveau('${e.id}',1)">${canNext?'✓ Valider → suivant':'Niveau max'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function changeNiveau(exId, dir){
+  const e=ex(exId); let i=nivIndex(exId,prog[exId])+dir;
+  i=Math.max(0,Math.min(e.niveaux.length-1,i));
+  prog[exId]=e.niveaux[i].id; saveProg(prog);
+  renderProgression();
+  if(dir>0) toast('Niveau validé 💪');
+}
+window.changeNiveau = changeNiveau;
+
+/* ============================ JOURNAL ============================ */
+function renderJournal(){
+  const sess=loadSess();
+  $('#journal-empty').classList.toggle('hide', sess.length>0);
+  $('#journal-list').innerHTML = sess.map(s=>{
+    const rows = s.items.map(it=>{
+      const unit=it.type==='temps'?'s':'';
+      const vals=it.tours.map(v=>v==null?'–':v+unit).join(' · ');
+      return `<div class="sess-row"><span>${it.exNom} <span class="muted small">· ${it.nivNom}</span></span><span class="small">${vals}</span></div>`;
+    }).join('');
+    return `<div class="card">
+      <div class="ex-head"><b>${fmtDate(s.date)}</b>
+        <button class="btn ghost sm" onclick="delSession(${s.id})" style="width:auto">🗑</button></div>
+      <div style="margin-top:8px">${rows}</div>
+      ${s.notes?`<div class="crit" style="border-color:var(--muted)">📝 ${s.notes.replace(/</g,'&lt;')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function delSession(id){
+  if(!confirm('Supprimer cette séance ?')) return;
+  saveSess(loadSess().filter(s=>s.id!==id)); renderJournal();
+}
+window.delSession = delSession;
+
+/* ============================ FICHES ============================ */
+function renderFiches(){
+  $('#fiches-list').innerHTML = EXERCICES.map(e=>{
+    const cur=prog[e.id];
+    const lvls = e.niveaux.map((n,i)=>`
+      <div style="padding:10px 0; border-top:1px solid var(--line)">
+        <div style="display:flex; justify-content:space-between; gap:8px">
+          <b>${i+1}. ${n.nom}</b>
+          ${n.id===cur?'<span class="pill ok">actuel</span>':''}${n.opt?'<span class="pill">opt</span>':''}
+        </div>
+        <div class="desc" style="margin:6px 0">${n.desc}</div>
+        <div class="muted small">🎯 ${n.critere}</div>
+      </div>`).join('');
+    return `<details class="card" ${'' }>
+      <summary>${e.nom} <span class="muted small">· ${e.groupe} · ${e.niveaux.length} niveaux</span></summary>
+      ${lvls}
+    </details>`;
+  }).join('');
+}
+
+/* ============================ IMPORT / EXPORT ============================ */
+$('#btn-export').addEventListener('click', ()=>{
+  const data={ progression:prog, sessions:loadSess(), exported:new Date().toISOString() };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='calisthenie-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+});
+$('#btn-import').addEventListener('click', ()=> $('#import-file').click());
+$('#import-file').addEventListener('change', ev=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const d=JSON.parse(r.result);
+    if(d.progression){ prog=d.progression; saveProg(prog); }
+    if(d.sessions){ saveSess(d.sessions); }
+    toast('Données importées ✓'); renderJournal();
+  }catch(e){ alert('Fichier invalide.'); } };
+  r.readAsText(f);
+});
+$('#btn-reset').addEventListener('click', ()=>{
+  if(!confirm('Tout réinitialiser (progression + journal) ? Irréversible.')) return;
+  localStorage.removeItem(LS_PROG); localStorage.removeItem(LS_SESS);
+  prog=loadProg(); renderJournal(); toast('Réinitialisé');
+});
+
+/* ============================ INIT ============================ */
+renderApercu();
+
+/* service worker (offline) — uniquement en http(s) */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
