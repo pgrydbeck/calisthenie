@@ -52,7 +52,7 @@
   .pill{display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:var(--card2); color:var(--muted); letter-spacing:.4px}
   .pill.accent{background:rgba(255,107,53,.16); color:var(--accent2)}
   .pill.ok{background:rgba(62,207,142,.16); color:var(--ok)}
-  input[type=number],textarea{
+  input[type=number],input[type=text],input[type=password],textarea{
     width:100%; background:var(--bg2); border:1px solid var(--line); color:var(--txt);
     border-radius:12px; padding:13px; font-size:16px; font-family:inherit;
   }
@@ -233,6 +233,30 @@
         </div>
         <input type="file" id="import-file" accept="application/json" class="hide">
       </div>
+      <div class="card" style="margin-top:10px">
+        <div class="ex-head">
+          <div class="nom" style="font-size:14px">☁︎ Synchro cloud (Gist privé)</div>
+          <span class="pill" id="sync-state">non configuré</span>
+        </div>
+        <p class="small muted" style="margin:8px 0 0">
+          Sauvegarde automatique sur un gist GitHub privé à chaque séance enregistrée.
+          Crée un token <i>fine-grained</i> avec la permission <b>« Gists : Read and write »</b>,
+          colle-le ci-dessous. Laisse le Gist ID vide : il sera créé à la première sauvegarde.
+        </p>
+        <div style="height:10px"></div>
+        <label class="fld">Token GitHub</label>
+        <input type="password" id="gist-token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div style="height:8px"></div>
+        <label class="fld">Gist ID</label>
+        <input type="text" id="gist-id" placeholder="auto à la 1re sauvegarde" autocapitalize="off" spellcheck="false">
+        <div style="height:10px"></div>
+        <div class="row wrap">
+          <button class="btn ghost sm" id="btn-gist-save">💾 Enregistrer la config</button>
+          <button class="btn ok sm" id="btn-gist-push">☁︎ Sauvegarder maintenant</button>
+          <button class="btn ghost sm" id="btn-gist-pull">⬇︎ Restaurer du cloud</button>
+        </div>
+        <div class="muted small" id="sync-info" style="margin-top:8px"></div>
+      </div>
     </details>
   </section>
 
@@ -355,6 +379,10 @@ const CIRCUIT = { tours:3, restEx:60, restTour:120 }; // 45-60 s / 2 min
 /* ============================ STOCKAGE ============================ */
 const LS_PROG = 'tt_progression_v1';
 const LS_SESS = 'tt_sessions_v1';
+const LS_GTOKEN = 'tt_gist_token_v1';
+const LS_GID    = 'tt_gist_id_v1';
+const LS_GSYNC  = 'tt_gist_lastsync_v1';
+const GIST_FILE = 'calisthenie.json';
 
 function loadProg(){
   let p = {};
@@ -549,6 +577,7 @@ function saveSession(){
   $('#seance-intro').classList.remove('hide');
   renderApercu();
   toast('Séance enregistrée ✓');
+  gistPush(true); // sauvegarde cloud auto si configurée
   showView('journal');
 }
 
@@ -625,6 +654,7 @@ function renderJournal(){
       ${s.notes?`<div class="crit" style="border-color:var(--muted)">📝 ${s.notes.replace(/</g,'&lt;')}</div>`:''}
     </div>`;
   }).join('');
+  renderSyncState();
 }
 function delSession(id){
   if(!confirm('Supprimer cette séance ?')) return;
@@ -678,6 +708,74 @@ $('#btn-reset').addEventListener('click', ()=>{
   localStorage.removeItem(LS_PROG); localStorage.removeItem(LS_SESS);
   prog=loadProg(); renderJournal(); toast('Réinitialisé');
 });
+
+/* ============================ SYNCHRO GIST ============================ */
+function gistCfg(){ return { token:localStorage.getItem(LS_GTOKEN)||'', id:localStorage.getItem(LS_GID)||'' }; }
+function gistHeaders(token){ return { 'Authorization':'Bearer '+token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' }; }
+function curData(){ return { progression:prog, sessions:loadSess(), exported:new Date().toISOString() }; }
+
+function renderSyncState(){
+  const {token,id}=gistCfg();
+  const tEl=$('#gist-token'), iEl=$('#gist-id');
+  if(tEl && document.activeElement!==tEl) tEl.value=token;
+  if(iEl && document.activeElement!==iEl) iEl.value=id;
+  const st=$('#sync-state'); if(!st) return;
+  if(token){ st.textContent = id?'connecté':'token OK'; st.className='pill ok'; }
+  else { st.textContent='non configuré'; st.className='pill'; }
+  const last=localStorage.getItem(LS_GSYNC);
+  $('#sync-info').textContent = last ? 'Dernière synchro : '+fmtDate(last) : '';
+}
+
+function gistSaveCfg(){
+  const t=$('#gist-token').value.trim(), id=$('#gist-id').value.trim();
+  if(t) localStorage.setItem(LS_GTOKEN,t); else localStorage.removeItem(LS_GTOKEN);
+  if(id) localStorage.setItem(LS_GID,id); else localStorage.removeItem(LS_GID);
+  renderSyncState(); toast('Config enregistrée ✓');
+}
+
+async function gistPush(silent){
+  const {token,id}=gistCfg();
+  if(!token){ if(!silent) toast('Configure d’abord le token'); return; }
+  const body={ description:'Calisthénie — sauvegarde', files:{ [GIST_FILE]:{ content: JSON.stringify(curData(),null,2) } } };
+  try{
+    let res;
+    if(id){
+      res=await fetch('https://api.github.com/gists/'+id,{method:'PATCH',headers:gistHeaders(token),body:JSON.stringify(body)});
+    } else {
+      body.public=false;
+      res=await fetch('https://api.github.com/gists',{method:'POST',headers:gistHeaders(token),body:JSON.stringify(body)});
+    }
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const j=await res.json();
+    if(!id && j.id) localStorage.setItem(LS_GID, j.id);
+    localStorage.setItem(LS_GSYNC, new Date().toISOString());
+    renderSyncState();
+    if(!silent) toast('Sauvegardé sur le cloud ✓');
+  }catch(e){ if(!silent) toast('Échec sauvegarde : '+e.message); else console.warn('gist push',e); }
+}
+
+async function gistPull(){
+  const {token,id}=gistCfg();
+  if(!token || !id){ toast('Token + Gist ID requis'); return; }
+  if(!confirm('Restaurer depuis le cloud ? Les données locales seront remplacées.')) return;
+  try{
+    const res=await fetch('https://api.github.com/gists/'+id,{headers:gistHeaders(token)});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const j=await res.json();
+    const f=j.files && j.files[GIST_FILE];
+    if(!f) throw new Error('fichier introuvable dans le gist');
+    const d=JSON.parse(f.content);
+    if(d.progression){ prog=d.progression; saveProg(prog); }
+    if(d.sessions){ saveSess(d.sessions); }
+    localStorage.setItem(LS_GSYNC, new Date().toISOString());
+    renderJournal(); renderApercu(); renderSyncState();
+    toast('Restauré du cloud ✓');
+  }catch(e){ toast('Échec restauration : '+e.message); }
+}
+
+$('#btn-gist-save').addEventListener('click', gistSaveCfg);
+$('#btn-gist-push').addEventListener('click', ()=>gistPush(false));
+$('#btn-gist-pull').addEventListener('click', gistPull);
 
 /* ============================ INIT ============================ */
 renderApercu();
