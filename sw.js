@@ -1,7 +1,7 @@
 /* Service worker — cache offline pour la PWA Calisthénie.
    Stratégie : cache-first sur les fichiers de l'app (app shell).
    Bump CACHE quand tu modifies index.html / les assets. */
-const CACHE = 'calisthenie-v1';
+const CACHE = 'calisthenie-v2';
 const ASSETS = [
   './',
   './index.html',

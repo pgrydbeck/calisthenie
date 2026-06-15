@@ -76,6 +76,16 @@
   .lvlbar .seg{flex:1; height:6px; border-radius:3px; background:var(--card2)}
   .lvlbar .seg.done{background:var(--ok)}
   .lvlbar .seg.cur{background:var(--accent)}
+  /* sélecteur de niveau (tape pour te situer) */
+  .lvlpicker{display:flex; gap:6px; flex-wrap:wrap; margin:10px 0 4px}
+  .lvlpicker .lp{
+    flex:1; min-width:36px; text-align:center; padding:9px 0; border-radius:10px;
+    background:var(--card2); color:var(--muted); font-weight:700; font-size:14px;
+    cursor:pointer; border:1px solid transparent; font-variant-numeric:tabular-nums;
+  }
+  .lvlpicker .lp:active{transform:translateY(1px)}
+  .lvlpicker .lp.done{color:var(--ok); border-color:rgba(62,207,142,.4)}
+  .lvlpicker .lp.cur{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a1206}
   .ex-head{display:flex; align-items:center; justify-content:space-between; gap:10px}
   .ex-head .nom{font-weight:700; font-size:15.5px}
   .crit{background:var(--bg2); border-left:3px solid var(--accent); padding:9px 12px; border-radius:8px; font-size:13px; margin:10px 0}
@@ -204,7 +214,7 @@
 
   <!-- ====================== PROGRESSION ====================== -->
   <section id="view-progression" class="hide">
-    <p class="small muted">Ton niveau actuel pour chaque exercice. Quand tu valides le critère, passe au niveau suivant.</p>
+    <p class="small muted">Pas sûr de ton niveau ? <b>Tape un numéro</b> pour te situer directement, lis le critère affiché dessous pour vérifier. Tu peux changer à tout moment. Les fiches techniques détaillées sont dans l'onglet <b>Fiches</b>.</p>
     <div id="progression-list"></div>
   </section>
 
@@ -565,14 +575,14 @@ function renderProgression(){
   $('#progression-list').innerHTML = EXERCICES.map(e=>{
     const ci = nivIndex(e.id, prog[e.id]);
     const n = e.niveaux[ci];
-    const segs = e.niveaux.map((_,i)=>`<div class="seg ${i<ci?'done':(i===ci?'cur':'')}"></div>`).join('');
+    const chips = e.niveaux.map((nv,i)=>`<div class="lp ${i<ci?'done':(i===ci?'cur':'')}" onclick="setNiveau('${e.id}',${i})">${i+1}</div>`).join('');
     const canPrev = ci>0, canNext = ci<e.niveaux.length-1;
     return `<div class="card">
       <div class="ex-head">
         <div><div class="nom">${e.nom}</div><div class="muted small">${e.groupe}</div></div>
         <span class="pill accent">Niveau ${ci+1}/${e.niveaux.length}</span>
       </div>
-      <div class="lvlbar">${segs}</div>
+      <div class="lvlpicker">${chips}</div>
       <div style="font-weight:700; margin-top:6px">${n.nom} ${n.opt?'<span class="pill">optionnel</span>':''}</div>
       <div class="crit"><b>Pour valider :</b> ${n.critere}</div>
       <div class="row">
@@ -590,6 +600,13 @@ function changeNiveau(exId, dir){
   if(dir>0) toast('Niveau validé 💪');
 }
 window.changeNiveau = changeNiveau;
+function setNiveau(exId, i){
+  const e=ex(exId); i=Math.max(0,Math.min(e.niveaux.length-1,i));
+  prog[exId]=e.niveaux[i].id; saveProg(prog);
+  renderProgression();
+  toast('Niveau '+(i+1)+' sélectionné');
+}
+window.setNiveau = setNiveau;
 
 /* ============================ JOURNAL ============================ */
 function renderJournal(){
