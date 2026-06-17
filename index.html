@@ -416,6 +416,20 @@ function toast(msg){
   clearTimeout(t._h); t._h=setTimeout(()=>t.classList.add('hide'),2000);
 }
 
+/* ---- Wake Lock : empêche l'écran de se verrouiller pendant la séance ---- */
+let _wakeLock = null;
+async function acquireWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener('release', ()=>{ _wakeLock=null; });
+    }
+  }catch(e){ /* refus/échec silencieux (batterie faible, onglet caché…) */ }
+}
+async function releaseWakeLock(){
+  try{ if(_wakeLock){ await _wakeLock.release(); _wakeLock=null; } }catch(e){}
+}
+
 /* ============================ NAVIGATION ============================ */
 function showView(v){
   $$('section[id^=view-]').forEach(s=>s.classList.add('hide'));
@@ -446,6 +460,7 @@ const session = {
 
 function startSession(){
   session.active=true; session.tour=0; session.exi=0; session.phase='ex'; session.results={};
+  acquireWakeLock();
   $('#seance-intro').classList.add('hide');
   $('#seance-done').classList.add('hide');
   $('#seance-live').classList.remove('hide');
@@ -547,6 +562,7 @@ function endRest(){
 function finishSession(){
   clearInterval(session.rest.h); stopChrono();
   session.active=false;
+  releaseWakeLock();
   $('#seance-live').classList.add('hide');
   $('#seance-done').classList.remove('hide');
   // récap
@@ -585,6 +601,7 @@ function abandon(){
   if(!confirm('Abandonner la séance en cours ? Les résultats non enregistrés seront perdus.')) return;
   clearInterval(session.rest.h); stopChrono();
   session.active=false;
+  releaseWakeLock();
   $('#seance-live').classList.add('hide');
   $('#seance-intro').classList.remove('hide');
   renderApercu();
@@ -598,6 +615,14 @@ $('#rest-minus').addEventListener('click', ()=>{ session.rest.sec=Math.max(5,ses
 $('#rest-plus').addEventListener('click', ()=>{ session.rest.sec+=15; $('#rest-timer').textContent=fmtTime(session.rest.sec); });
 $('#btn-save-sess').addEventListener('click', saveSession);
 $('#btn-abandon').addEventListener('click', abandon);
+
+/* ré-acquérir le wake lock au retour en avant-plan (iOS/Android le libèrent
+   automatiquement quand l'onglet est masqué : verrouillage, changement d'app…) */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && session.active && !_wakeLock){
+    acquireWakeLock();
+  }
+});
 
 /* ============================ PROGRESSION ============================ */
 function renderProgression(){
